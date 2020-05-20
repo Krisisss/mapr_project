@@ -1,5 +1,8 @@
 # mapr_project
 
-Prywatne repozytorium, służące do przekazywania najnowszych aktualizacji zadania.
-
-... Oczywiście, jak już wykombinuję, jak dodawać nowe osoby xd
+Zadania:
+- przygotowanie kilku modeli środowiska (mapy)
+- przygotowanie modelu robota o kinematyce samochodu
+- implementacja algorytmu RRT dla zdefiniowanego problemu
+- implementacja algorytmu RRT* dla zdefiniowanego problemu
+- wizualizacja zaplanowanej ścieżki i ruchu robota
