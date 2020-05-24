@@ -2,26 +2,26 @@
 import rospy as rp
 from grid_map import GridMap
 import numpy as np
+import random
+
 
 np.random.seed(444)
 
 
 class RRT(GridMap):
+
     def __init__(self):
         super(RRT, self).__init__()
+        self.max_velocity = 50
+        self.min_velocity = 1
+        self.L = 0.04
+        self.max_theta = np.pi/6
+        self.delta_t = 0.01 # 10 ms
         self.step = 0.1
 
-    def check_if_valid(self, a, b):
+    def check_if_valid(self, a):
         if a[0] < 0 or a[0] > self.width or a[1] < 0 or a[1] > self.height:
             return False
-        if b[0] < 0 or b[0] > self.width or b[1] < 0 or b[1] > self.height:
-            return False
-        for i in range(101):
-            x, y = self.pt_in_dir(a, b, i/100.0)
-            x = int(x * 50)
-            y = int(y * 50)
-            if self.map[y][x] > 50:
-                return False
         return True
 
     def is_free(self, x, y):
@@ -46,14 +46,28 @@ class RRT(GridMap):
                 closest = point
         return closest
 
-    def new_pt(self, pt, closest):
-        point = self.pt_in_dir(closest, pt, self.step/self.dist(pt, closest))
-        return point
+    def random_u(self):
+        u_s = random.random() * self.max_velocity
+        u_phi = (random.random() * 2 - 1) * self.max_theta
+        return u_s, u_phi
 
-    def pt_in_dir(self, st_point, end_point, percent):
-        x = percent*(end_point[0] - st_point[0])+st_point[0]
-        y = percent*(end_point[1] - st_point[1])+st_point[1]
-        return [x, y]
+    def check_path(self, point_closest):
+        u_s, u_phi = self.random_u()
+        for iteration in range(1, 101):
+            free, x, y, theta = self.check_point(point_closest, u_s/100 * iteration, u_phi)
+            if free and self.check_if_valid((x, y)):
+                continue
+            else:
+                return None, None, None
+        return (x, y, theta), u_s, u_phi
+
+    def check_point(self, point_closest, u_s, u_phi):
+        theta_t = point_closest[2] + u_s / self.L * np.tan(u_phi) * self.delta_t
+        x_t = point_closest[0] + u_s * np.cos(theta_t) * self.delta_t
+        y_t = point_closest[1] + u_s * np.sin(theta_t) * self.delta_t
+        free = self.is_free(x_t, y_t)
+        return free, x_t, y_t, theta_t
+
 
     def search(self):
         """
@@ -68,19 +82,23 @@ class RRT(GridMap):
         while is_no_path:
             point = self.random_point()
             closest = self.find_closest(point)
-            point = self.new_pt(point, closest)
-            if self.check_if_valid(point, closest):
-                self.parent[(point[0], point[1])] = closest
-            if self.check_if_valid(point, self.end):
-                last = (point[0], point[1])
-                path.append(last)
-                while is_no_path:
-                    last = self.parent[last]
-                    path.append(last)
-                    if last == self.start:
-                        is_no_path = False
-
+            point, u_s, u_phi = self.check_path(closest)
+            if u_s is None:
+                continue
+            self.parent[(point[0], point[1], point[2])] = closest
+            print(point)
             self.publish_search()
+
+
+            # if self.check_if_valid(point, self.end):
+            #     last = (point[0], point[1])
+            #     path.append(last)
+            #     while is_no_path:
+            #         last = self.parent[last]
+            #         path.append(last)
+            #         if last == self.start:
+            #             is_no_path = False
+
             #rp.sleep(0.05)
 
         self.publish_path(path)

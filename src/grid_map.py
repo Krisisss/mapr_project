@@ -42,11 +42,12 @@ class GridMap(object):
 
     def set_start(self, data):
         x, y = self.get_marker_xy(data)
-        self.start = (x, y)
+        theta = np.pi/2
+        self.start = (x, y, theta)
 
     def set_end(self, data):
         x, y = self.get_marker_xy(data)
-        self.end = (x, y)
+        self.end = (x, y, 0)
 
     def publish_search(self):
         marker = Marker()
