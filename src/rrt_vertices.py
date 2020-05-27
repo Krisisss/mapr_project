@@ -47,11 +47,13 @@ class RRT(GridMap):
         return closest
 
     def random_u(self):
+        # TODO: losowac tez orientacje?
         u_s = random.random() * self.max_velocity
         u_phi = (random.random() * 2 - 1) * self.max_theta
         return u_s, u_phi
 
-    def check_path(self, point_closest):
+    def check_path(self, point_closest, point_random):
+        # TODO: losowac kilka sterowan (10/20/30?) i wybrac to, ktore najbardziej zbliza do point_random
         u_s, u_phi = self.random_u()
         for iteration in range(1, 101):
             free, x, y, theta = self.check_point(point_closest, u_s/100 * iteration, u_phi)
@@ -76,20 +78,24 @@ class RRT(GridMap):
         (key is the child vertex, and value is its parent vertex).
         Uses self.publish_search() and self.publish_path(path) to publish the search tree and the final path respectively.
         """
+        # TODO: w wierzcholku powinny byc wszystkie dane samochodu (predkosc i kat kol)
         self.parent[self.start] = None
         path = [self.end]
         is_no_path = True
+        x = 0
         while is_no_path:
-            point = self.random_point()
+            random_point = self.random_point()
             closest = self.find_closest(point)
-            point, u_s, u_phi = self.check_path(closest)
+            point, u_s, u_phi = self.check_path(closest, random_point)
             if u_s is None:
                 continue
             self.parent[(point[0], point[1], point[2])] = closest
             print(point)
+            # TODO: publikowac wyszukiwanie jak trajektorie samochodu
             self.publish_search()
 
 
+            # TODO: sprawdzanie celu i sciezka start -> cel
             # if self.check_if_valid(point, self.end):
             #     last = (point[0], point[1])
             #     path.append(last)
