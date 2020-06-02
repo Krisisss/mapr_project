@@ -37,10 +37,8 @@ class Point:
 
 if __name__ == '__main__':
     rp.init_node('points', log_level=rp.DEBUG)
-    #st = Point(1.2, 1.2, "start", (0.0, 1.0, 0.0))
-    #en = Point(2.8, 2.8, "end", (1.0, 0.0, 0.0))
-    st = Point(5.8, 1.0, "start", (0.0, 1.0, 0.0))  #1.3, 0.7
-    en = Point(6.5, 1.0, "end", (1.0, 0.0, 0.0))   #2.5, 1.3
+    st = Point(5.8, 1.0, "start", (0.0, 1.0, 0.0))
+    en = Point(6.5, 1.0, "end", (1.0, 0.0, 0.0))
     while not rp.is_shutdown():
         st.publish()
         en.publish()

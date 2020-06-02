@@ -42,7 +42,7 @@ class GridMap(object):
 
     def set_start(self, data):
         x, y = self.get_marker_xy(data)
-        theta = np.pi/2
+        theta = np.pi  #np.pi/2
         self.start = (x, y, theta)
 
     def set_end(self, data):
