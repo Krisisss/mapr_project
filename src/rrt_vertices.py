@@ -87,10 +87,25 @@ class RRT(GridMap):
         y_t = point_closest[1] + u_s * np.sin(theta_t) * self.delta_t
         return x_t, y_t, theta_t
 
-    def future_check(self, point, u_s, u_phi):
+    def future_check(self, point, u_s):
 
         for iteration in range(1, 101):
-            pass
+            flag1 = 0
+            flag2 = 0
+            x, y, theta = self.calc_point(point, u_s/100 * iteration, self.max_phi/2)
+            if self.is_free(x, y) and self.check_if_valid((x, y)):
+                flag1 = 1
+
+
+            x, y, theta = self.calc_point(point, u_s/100 * iteration, -self.max_phi/2)
+            if self.is_free(x, y) and self.check_if_valid((x, y)):
+                flag2 = 1
+
+            if flag1 == 0 and flag2 == 0:
+                return False
+
+
+
         return True
 
 
@@ -109,7 +124,7 @@ class RRT(GridMap):
             closest = self.find_closest(random_point)
             point, u_s, u_phi = self.check_path(closest, random_point)
             # TODO: wyrzucanie punktow skierowanych w sciane
-            if point != (None, None, None) and self.future_check(point, u_s, u_phi) == True:
+            if point != (None, None, None) and self.future_check(point, u_s) == True:
                 self.parent[(point[0], point[1], point[2])] = closest
                 # print(u_phi)
             # TODO: publikowac wyszukiwanie jak trajektorie samochodu
