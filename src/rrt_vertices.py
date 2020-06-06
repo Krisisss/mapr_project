@@ -92,16 +92,16 @@ class RRT(GridMap):
         for iteration in range(1, 101):
             flag1 = 0
             flag2 = 0
-            x, y, theta = self.calc_point(point, u_s/100 * iteration, self.max_phi/2)
+            x, y, theta = self.calc_point(point, u_s/100 * iteration, self.max_phi/4)
             if self.is_free(x, y) and self.check_if_valid((x, y)):
                 flag1 = 1
 
 
-            x, y, theta = self.calc_point(point, u_s/100 * iteration, -self.max_phi/2)
+            x, y, theta = self.calc_point(point, u_s/100 * iteration, -self.max_phi/4)
             if self.is_free(x, y) and self.check_if_valid((x, y)):
                 flag2 = 1
 
-            if flag1 == 0 and flag2 == 0:
+            if flag1 == 0 or flag2 == 0:
                 return False
 
 
