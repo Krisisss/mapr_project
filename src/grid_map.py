@@ -14,7 +14,7 @@ class GridMap(object):
         self.resolution = None
         self.width = None
         self.height = None
-        self.delta_t = 1 # 10 ms
+        self.delta_t = 2.0 # 10 ms
         self.L = 0.04
 
         self.parent = {}
@@ -75,6 +75,11 @@ class GridMap(object):
             add_point(v)
         self.search_pub.publish(marker)
 
+    @staticmethod
+    def dist(pos1, pos2):
+        distance = ((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)**0.5
+        return distance
+
     def publish_path(self, path):
         path_msg = Path()
         path_msg.header.frame_id = 'map'
@@ -82,24 +87,22 @@ class GridMap(object):
             if index_p + 1 < len(path):
                 u_s = path[index_p + 1][3]
                 u_phi = path[index_p + 1][4]
-            else:
-                continue
-            for iteration in range(1, 101):
-                theta_t = p[2] + (u_s/100 * iteration) / self.L * np.tan(u_phi) * self.delta_t
-                x_t = p[0] + (u_s/100 * iteration) * np.cos(theta_t) * self.delta_t
-                y_t = p[1] + (u_s/100 * iteration) * np.sin(theta_t) * self.delta_t
-                pose = PoseStamped()
-                pose.pose.position.x = x_t
-                pose.pose.position.y = y_t
-                pose.pose.position.z = 0.001
-                pose.pose.orientation.x = 0
-                pose.pose.orientation.y = 0
-                pose.pose.orientation.z = 0
-                pose.pose.orientation.w = 1
-                pose.header.frame_id = 'map'
-                pose.header.stamp = rp.Time.now()
-                path_msg.poses.append(pose)
+                for iteration in range(1, 101):
+                    theta_t = p[2] + (u_s/100 * iteration) / self.L * np.tan(u_phi) * self.delta_t
+                    x_t = p[0] + (u_s/100 * iteration) * np.cos(theta_t) * self.delta_t
+                    y_t = p[1] + (u_s/100 * iteration) * np.sin(theta_t) * self.delta_t
+                    pose = PoseStamped()
+                    pose.pose.position.x = x_t
+                    pose.pose.position.y = y_t
+                    pose.pose.position.z = 0.001
+                    pose.pose.orientation.x = 0
+                    pose.pose.orientation.y = 0
+                    pose.pose.orientation.z = 0
+                    pose.pose.orientation.w = 1
+                    pose.header.frame_id = 'map'
+                    pose.header.stamp = rp.Time.now()
+                    path_msg.poses.append(pose)
+                    if self.dist(self.end, (x_t, y_t)) < 0.01:
+                        break
         self.path_pub.publish(path_msg)
 
-    def search(self):
-        return NotImplementedError()

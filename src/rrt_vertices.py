@@ -13,12 +13,7 @@ class RRT(GridMap):
     def __init__(self):
         super(RRT, self).__init__()
         self.max_velocity = 10
-        #self.min_velocity = 0.001
-        # moved to grid_map self.L = 0.04
         self.max_phi = np.pi/6
-        # moved to grid_map self.delta_t = 1 # 10 ms
-        self.step = 0.1
-
 
     def check_if_valid(self, a):
         if a[0] < 0 or a[0] > self.width or a[1] < 0 or a[1] > self.height:
@@ -47,10 +42,10 @@ class RRT(GridMap):
                 closest = point
         return closest
 
-    def random_u(self):
-        # TODO: brac pod uwage kat i predkosc z 'closest'?
+    def random_u(self, prev_s, prev_phi):
+        # TODO: losowanie sterowan powinno brac pod uwage sterowanie z point_closest,
+        #  zeby nie bylo jakichs wielkich zmian kierunku/predkosci
         u_s = random.random() * self.max_velocity
-        # u_s = (random.random() * self.max_velocity + self.min_velocity)/(self.max_velocity + self.min_velocity)
         u_phi = (random.random() * 2 - 1) * self.max_phi
         return u_s, u_phi
 
@@ -61,9 +56,7 @@ class RRT(GridMap):
         best_s = 1e6
         dist_best = 1e6
         for sample_iteration in range(number_of_samples):
-            # TODO: losowanie sterowan powinno brac pod uwage sterowanie z point_closest,
-            #  zeby nie bylo jakichs wielkich zmian kierunku/predkosci
-            u_s, u_phi = self.random_u()
+            u_s, u_phi = self.random_u(point_closest[3], point_closest[4])
             valid = True
             for iteration in range(1, 101):
                 x, y, theta = self.calc_point((point_closest[0], point_closest[1], point_closest[2]), u_s/100 * iteration, u_phi)
@@ -99,16 +92,15 @@ class RRT(GridMap):
             flag1 = 0
             flag2 = 0
             x, y, theta = self.calc_point(point, u_s/100 * iteration, self.max_phi/4)
-            if self.is_free(x, y) and self.check_if_valid((x, y)):
+            if self.check_if_valid((x, y)) and self.is_free(x, y):
                 flag1 = 1
 
             x, y, theta = self.calc_point(point, u_s/100 * iteration, -self.max_phi/4)
-            if self.is_free(x, y) and self.check_if_valid((x, y)):
+            if self.check_if_valid((x, y)) and self.is_free(x, y):
                 flag2 = 1
 
             if flag1 == 0 or flag2 == 0:
                 return False
-
         return True
 
     def check_finish(self, point, finish):
@@ -119,26 +111,18 @@ class RRT(GridMap):
         dist_rand = 1e6
 
         for sample_iteration in range(number_of_samples):
-            u_s, u_phi = self.random_u()
+            u_s, u_phi = self.random_u(point[3], point[4])
             for iteration in range(1, 101):
                 x, y, theta = self.calc_point(point, u_s / 100 * iteration, u_phi)
                 if self.check_if_valid((x, y)) and self.is_free(x, y):
                     if self.dist((x, y), finish) < 0.01:
                         best_s = u_s
                         best_phi = u_phi
-                        dist_rand = self.dist((x, y), finish)
-                        continue
+                        return (x, y, theta), best_s, best_phi
                 else:
                     break
-                if dist_rand < dist_best:
-                    best_s = u_s
-                    best_phi = u_phi
-                    dist_best = dist_rand
+        return (None, None, None), None, None
 
-        if best_phi != 1e6:
-            return best_s, best_phi
-        else:
-            return None, None
 
     def search(self):
 
@@ -152,31 +136,31 @@ class RRT(GridMap):
             closest = self.find_closest(random_point)
             point, u_s, u_phi = self.check_path(closest, random_point)
             # TODO: wyrzucanie punktow skierowanych w sciane
-            if point != (None, None, None) and self.future_check(point, u_s) == True:
+            if point != (None, None, None) and self.future_check(point, u_s) is True:
                 self.parent[(point[0], point[1], point[2], u_s, u_phi)] \
                     = (closest[0], closest[1], closest[2], closest[3], closest[4])
             else:
                 continue
 
             self.publish_search()
-            # stopper += 1
-            # if stopper > 1000:
-            #     print("exceeded 1000 iterations. stopping")
-            #     break
 
-            end_u_s, end_u_phi = self.check_finish(point, self.end)
-            if end_u_s is not None:
-                self.parent[(self.end[0], self.end[1], self.end[2], end_u_s, end_u_phi)] = (point[0], point[1], point[2], u_s, u_phi)
-                last = (self.end[0], self.end[1], self.end[2], end_u_s, end_u_phi)
-                path.append(last)
-                while is_no_path:
-                    last = self.parent[last]
+            if self.dist(point, self.end) < 0.5:
+                end_point, end_u_s, end_u_phi = self.check_finish((point[0], point[1], point[2], u_s, u_phi), self.end)
+                if end_u_s is not None:
+                    self.parent[(end_point[0], end_point[1], end_point[2], end_u_s, end_u_phi)] = (point[0], point[1], point[2], u_s, u_phi)
+                    last = (end_point[0], end_point[1], end_point[2], end_u_s, end_u_phi)
                     path.append(last)
-                    if last == self.start:
-                        print("start recovered")
-                        is_no_path = False
+                    while is_no_path:
+                        last = self.parent[last]
+                        path.append(last)
+                        if last == self.start:
+                            print("start recovered")
+                            is_no_path = False
 
         path.reverse()
+        for x in range(1, 20):
+            print(path[-x], "\n")
+
         self.publish_path(path)
         print('path found')
         while not rp.is_shutdown():
