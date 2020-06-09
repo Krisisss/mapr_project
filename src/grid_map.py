@@ -14,6 +14,9 @@ class GridMap(object):
         self.resolution = None
         self.width = None
         self.height = None
+        self.delta_t = 1 # 10 ms
+        self.L = 0.04
+
         self.parent = {}
         rp.init_node('graph_search', log_level=rp.DEBUG)
         rp.Subscriber('map', OccupancyGrid, self.map_callback)
@@ -43,11 +46,11 @@ class GridMap(object):
     def set_start(self, data):
         x, y = self.get_marker_xy(data)
         theta = np.pi  #np.pi/2
-        self.start = (x, y, theta)
+        self.start = (x, y, theta, 0, 0)
 
     def set_end(self, data):
         x, y = self.get_marker_xy(data)
-        self.end = (x, y, 0)
+        self.end = (x, y, 0, 0, 0)
 
     def publish_search(self):
         marker = Marker()
@@ -75,18 +78,27 @@ class GridMap(object):
     def publish_path(self, path):
         path_msg = Path()
         path_msg.header.frame_id = 'map'
-        for p in path:
-            pose = PoseStamped()
-            pose.pose.position.x = p[0]
-            pose.pose.position.y = p[1]
-            pose.pose.position.z = 0.001
-            pose.pose.orientation.x = 0
-            pose.pose.orientation.y = 0
-            pose.pose.orientation.z = 0
-            pose.pose.orientation.w = 1
-            pose.header.frame_id = 'map'
-            pose.header.stamp = rp.Time.now()
-            path_msg.poses.append(pose)
+        for index_p, p in enumerate(path):
+            if index_p + 1 < len(path):
+                u_s = path[index_p + 1][3]
+                u_phi = path[index_p + 1][4]
+            else:
+                continue
+            for iteration in range(1, 101):
+                theta_t = p[2] + (u_s/100 * iteration) / self.L * np.tan(u_phi) * self.delta_t
+                x_t = p[0] + (u_s/100 * iteration) * np.cos(theta_t) * self.delta_t
+                y_t = p[1] + (u_s/100 * iteration) * np.sin(theta_t) * self.delta_t
+                pose = PoseStamped()
+                pose.pose.position.x = x_t
+                pose.pose.position.y = y_t
+                pose.pose.position.z = 0.001
+                pose.pose.orientation.x = 0
+                pose.pose.orientation.y = 0
+                pose.pose.orientation.z = 0
+                pose.pose.orientation.w = 1
+                pose.header.frame_id = 'map'
+                pose.header.stamp = rp.Time.now()
+                path_msg.poses.append(pose)
         self.path_pub.publish(path_msg)
 
     def search(self):
