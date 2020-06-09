@@ -105,11 +105,6 @@ class RRT(GridMap):
 
     def check_finish(self, point, finish):
         number_of_samples = 20
-        best_phi = 1e6
-        best_s = 1e6
-        dist_best = 1e6
-        dist_rand = 1e6
-
         for sample_iteration in range(number_of_samples):
             u_s, u_phi = self.random_u(point[3], point[4])
             for iteration in range(1, 101):
@@ -118,11 +113,10 @@ class RRT(GridMap):
                     if self.dist((x, y), finish) < 0.01:
                         best_s = u_s
                         best_phi = u_phi
-                        return (x, y, theta), best_s, best_phi
+                        return best_s, best_phi
                 else:
                     break
-        return (None, None, None), None, None
-
+        return None, None
 
     def search(self):
 
@@ -145,10 +139,11 @@ class RRT(GridMap):
             self.publish_search()
 
             if self.dist(point, self.end) < 0.5:
-                end_point, end_u_s, end_u_phi = self.check_finish((point[0], point[1], point[2], u_s, u_phi), self.end)
+                end_u_s, end_u_phi = self.check_finish((point[0], point[1], point[2], u_s, u_phi), self.end)
                 if end_u_s is not None:
-                    self.parent[(end_point[0], end_point[1], end_point[2], end_u_s, end_u_phi)] = (point[0], point[1], point[2], u_s, u_phi)
-                    last = (end_point[0], end_point[1], end_point[2], end_u_s, end_u_phi)
+                    self.parent[(self.end[0], self.end[1], self.end[2], end_u_s, end_u_phi)] \
+                        = (point[0], point[1], point[2], u_s, u_phi)
+                    last = (self.end[0], self.end[1], self.end[2], end_u_s, end_u_phi)
                     path.append(last)
                     while is_no_path:
                         last = self.parent[last]
