@@ -2,6 +2,7 @@
 <include file="$(find mapr_project)/launch/map_hungaroring.launch" />
 <node name="graph_search" pkg="mapr_project" type="rrt_vertices.py" output="screen" />
 <node name="points" pkg="mapr_project" type="points.py" output="screen" />
+<node name="car_viz" pkg="mapr_project" type="car_viz.py" output="screen" />
 <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mapr_project)/rviz/demo.rviz" />
 
 </launch>
