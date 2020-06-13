@@ -4,6 +4,7 @@ import rospy as rp
 from geometry_msgs.msg import PoseStamped, Point
 from nav_msgs.msg import OccupancyGrid, Path
 from visualization_msgs.msg import Marker, MarkerArray
+from car_viz import Car
 
 
 class GridMap(object):
@@ -11,6 +12,7 @@ class GridMap(object):
         self.map = None
         self.start = None
         self.end = None
+        self.car = None
         self.resolution = None
         self.width = None
         self.height = None
@@ -22,6 +24,8 @@ class GridMap(object):
         rp.Subscriber('map', OccupancyGrid, self.map_callback)
         rp.Subscriber('point_start', Marker, self.set_start)
         rp.Subscriber('point_end', Marker, self.set_end)
+#        rp.Subscriber('car', Marker, self.set_car)
+
         self.path_pub = rp.Publisher('path', Path, queue_size=10)
         self.search_pub = rp.Publisher('search', Marker, queue_size=10)
         while self.map is None or self.start is None or self.end is None:
@@ -51,6 +55,10 @@ class GridMap(object):
     def set_end(self, data):
         x, y = self.get_marker_xy(data)
         self.end = (x, y, 0, 0, 0)
+
+#    def set_car(self, data):
+#        x, y = self.get_marker_xy(data)
+#        self.car = (x, y, 0, 0, 0)
 
     def publish_search(self):
         marker = Marker()
@@ -102,7 +110,10 @@ class GridMap(object):
                     pose.header.frame_id = 'map'
                     pose.header.stamp = rp.Time.now()
                     path_msg.poses.append(pose)
+                    car = Car(x_t, y_t, theta_t, "car", (1.0, 0.0, 1.0))
+                    car.publish()
+                    self.path_pub.publish(path_msg)
+                    rp.sleep(0.005)
+
                     if self.dist(self.end, (x_t, y_t)) < 0.01:
                         break
-        self.path_pub.publish(path_msg)
-
