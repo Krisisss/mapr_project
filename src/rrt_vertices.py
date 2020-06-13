@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 import rospy as rp
 from grid_map import GridMap
+from car_viz import Car
 import numpy as np
 import random
 
+
+#        while True:
+#            car = Car(7.0, 1.0, XDDD, "car", (0.0, 0.0, 1.0))
+#            car.publish()
 
 np.random.seed(444)
 
@@ -99,8 +104,9 @@ class RRT(GridMap):
             if self.check_if_valid((x, y)) and self.is_free(x, y):
                 flag2 = 1
 
-            if flag1 == 0 or flag2 == 0:
+            if flag1 == 0 and flag2 == 0:
                 return False
+
         return True
 
     def check_finish(self, point, finish):
@@ -119,7 +125,6 @@ class RRT(GridMap):
         return None, None
 
     def search(self):
-
         self.parent[self.start] = None
         path = [self.end]
         is_no_path = True
@@ -153,14 +158,18 @@ class RRT(GridMap):
                             is_no_path = False
 
         path.reverse()
-        for x in range(1, 20):
-            print(path[-x], "\n")
+#        for x in range(1, 20):
+#            print(path[-x], "\n")
 
         self.publish_path(path)
         print('path found')
         while not rp.is_shutdown():
             rp.sleep(1)
 
+
+if __name__ == '__main__':
+    rrt = RRT()
+    rrt.search()
 
 if __name__ == '__main__':
     rrt = RRT()
