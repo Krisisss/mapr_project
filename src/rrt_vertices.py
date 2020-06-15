@@ -6,10 +6,6 @@ import numpy as np
 import random
 
 
-#        while True:
-#            car = Car(7.0, 1.0, XDDD, "car", (0.0, 0.0, 1.0))
-#            car.publish()
-
 np.random.seed(444)
 
 
