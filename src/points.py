@@ -13,7 +13,6 @@ class Point:
         self.marker.ns = name
         self.marker.id = 0
         self.marker.type = Marker.CYLINDER
-        # self.marker.action = Marker.ADD
         self.marker.pose.position.x = x
         self.marker.pose.position.y = y
         self.marker.pose.position.z = 0.05

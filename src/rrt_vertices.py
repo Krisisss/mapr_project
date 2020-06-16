@@ -44,8 +44,6 @@ class RRT(GridMap):
         return closest
 
     def random_u(self, prev_s, prev_phi):
-        # TODO: losowanie sterowan powinno brac pod uwage sterowanie z point_closest,
-        #  zeby nie bylo jakichs wielkich zmian kierunku/predkosci
         u_s = random.random() * self.max_velocity
         u_phi = (random.random() * 2 - 1) * self.max_phi
         return u_s, u_phi
@@ -75,7 +73,6 @@ class RRT(GridMap):
                     best_phi = u_phi
                     dist_best = dist_rand
 
-        # TODO: przerobic, zeby nie zwracac None
         if best_phi != 1e6:
             return best_point, best_s, best_phi
         else:
@@ -130,7 +127,6 @@ class RRT(GridMap):
             random_point = self.random_point()
             closest = self.find_closest(random_point)
             point, u_s, u_phi = self.check_path(closest, random_point)
-            # TODO: wyrzucanie punktow skierowanych w sciane
             if point != (None, None, None) and self.future_check(point, u_s) is True:
                 self.parent[(point[0], point[1], point[2], u_s, u_phi)] \
                     = (closest[0], closest[1], closest[2], closest[3], closest[4])
@@ -154,9 +150,6 @@ class RRT(GridMap):
                             is_no_path = False
 
         path.reverse()
-#        for x in range(1, 20):
-#            print(path[-x], "\n")
-
         self.publish_path(path)
         print('path found')
         while not rp.is_shutdown():

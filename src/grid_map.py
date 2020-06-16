@@ -16,7 +16,7 @@ class GridMap(object):
         self.resolution = None
         self.width = None
         self.height = None
-        self.delta_t = 2.0 # 10 ms
+        self.delta_t = 2.0
         self.L = 0.04
 
         self.parent = {}
@@ -38,8 +38,6 @@ class GridMap(object):
         self.height = data.info.height * self.resolution
         map = np.array(data.data)
         map = np.reshape(map, (data.info.height, data.info.width))
-        #map = np.reshape(map, (data.info.width, data.info.height))
-        #map = np.transpose(map)
         self.map = map
 
     def get_marker_xy(self, marker):
@@ -55,10 +53,6 @@ class GridMap(object):
     def set_end(self, data):
         x, y = self.get_marker_xy(data)
         self.end = (x, y, 0, 0, 0)
-
-#    def set_car(self, data):
-#        x, y = self.get_marker_xy(data)
-#        self.car = (x, y, 0, 0, 0)
 
     def publish_search(self):
         marker = Marker()
